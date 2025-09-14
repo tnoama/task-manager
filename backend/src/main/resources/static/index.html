@@ -14,19 +14,26 @@
       }
       .main {
         display: flex;
-        max-width: 900px;
+        width: 100%;
+        max-width: 1200px;
+        min-width: 900px;
         margin: 40px auto;
         background: #fff;
         border-radius: 8px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      }
-      .form-section,
-      .dashboard-section {
-        flex: 1;
-        padding: 32px 24px;
+        align-items: stretch;
       }
       .form-section {
+        flex: 0 0 320px;
+        padding: 32px 24px;
         border-right: 1px solid #eee;
+        background: #fff;
+      }
+      .dashboard-section {
+        flex: 1 1 0;
+        padding: 32px 24px;
+        background: #fff;
+        min-width: 0;
       }
       h2 {
         margin-top: 0;
@@ -174,8 +181,8 @@
         <table id="tasksTable">
           <thead>
             <tr>
-              <th>Title</th>
               <th>Assignee</th>
+              <th>Title</th>
               <th>Description</th>
               <th>Category</th>
               <th>Priority</th>
@@ -211,11 +218,11 @@
       const sortBy = document.getElementById("sortBy").value;
       const sortDir = document.getElementById("sortDir").value;
       if (search) url += `&assignee=${encodeURIComponent(search)}`;
-      if (category) url += `&category=${category}`;
-      if (priority) url += `&priority=${priority}`;
-      if (status) url += `&status=${status}`;
-      if (sortBy) url += `&sortBy=${sortBy}`;
-      if (sortDir) url += `&sortDir=${sortDir}`;
+      if (category && category !== "") url += `&category=${category}`;
+      if (priority && priority !== "") url += `&priority=${priority}`;
+      if (status && status !== "") url += `&status=${status}`;
+      if (sortBy && sortBy !== "") url += `&sortBy=${sortBy}`;
+      if (sortDir && sortDir !== "") url += `&sortDir=${sortDir}`;
       try {
         const res = await fetch(url);
         if (!res.ok) {
@@ -240,8 +247,8 @@
       tasks.forEach((task) => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-            <td>${task.title || ""}</td>
             <td>${task.assignee || ""}</td>
+            <td>${task.title || ""}</td>
             <td>${task.description || ""}</td>
             <td>${task.category || ""}</td>
             <td>${task.priority || ""}</td>
@@ -302,6 +309,7 @@
     document.getElementById("filterBtn").addEventListener("click", function () {
       search = document.getElementById("search").value;
       page = 0;
+      // Always read all filter values and update the table
       fetchTasks();
     });
 
@@ -343,6 +351,6 @@
     };
 
     // Auto-refresh on filter/sort change
-    // Filtering now only happens when Filter button is clicked
+    // Filtering only happens when Filter button is clicked
   </script>
 </html>

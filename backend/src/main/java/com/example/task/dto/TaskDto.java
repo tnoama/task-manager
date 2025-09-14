@@ -30,7 +30,7 @@ public class TaskDto {
 
     private TaskItem.Status status;
 
-    private TaskItem.Priority priority = TaskItem.Priority.MEDIUM;
+    private TaskItem.Priority priority;
 
     @jakarta.validation.constraints.FutureOrPresent(message = "dueDate must be today or in the future")
     private LocalDate dueDate;

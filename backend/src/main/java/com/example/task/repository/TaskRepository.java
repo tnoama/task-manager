@@ -9,6 +9,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
 
 public interface TaskRepository extends JpaRepository<TaskItem, UUID> {
+    Page<TaskItem> findByCategory(TaskItem.Category category, Pageable pageable);
+
     Page<TaskItem> findByAssigneeContainingIgnoreCaseAndCategoryAndStatus(
             String assignee, TaskItem.Category category, TaskItem.Status status, Pageable pageable);
 

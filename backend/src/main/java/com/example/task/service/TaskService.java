@@ -27,7 +27,7 @@ public class TaskService {
         return taskRepository.findById(id);
     }
 
-    public TaskItem updateTask(UUID id, TaskItem updates) {
+    public TaskItem updateTask(UUID id, com.example.task.dto.TaskDto updates) {
         return taskRepository.findById(id).map(task -> {
             if (updates.getDescription() != null)
                 task.setDescription(updates.getDescription());
@@ -35,11 +35,9 @@ public class TaskService {
                 task.setStatus(updates.getStatus());
             if (updates.getDueDate() != null)
                 task.setDueDate(updates.getDueDate());
-            // Only update priority if provided, otherwise keep existing
-            if (updates.getPriority() != null) {
+            if (updates.getPriority() != null)
                 task.setPriority(updates.getPriority());
-            }
-            // else: do not overwrite priority
+            // Add other fields as needed
             task.setUpdatedAt(java.time.Instant.now());
             return taskRepository.save(task);
         }).orElse(null);
@@ -61,6 +59,11 @@ public class TaskService {
             return taskRepository.findAll(pageable);
         }
 
+        // Only category filter
+        if (filterCategory && !filterAssignee && !filterStatus && !filterPriority) {
+            return taskRepository.findByCategory(category, pageable);
+        }
+
         // Only priority filter
         if (filterPriority && !filterAssignee && !filterCategory && !filterStatus) {
             return taskRepository.findByPriority(priority, pageable);
@@ -78,7 +81,6 @@ public class TaskService {
                     assignee, category, status, pageable);
         }
 
-        // Add more combinations as needed for clarity
         // Fallback: return all
         return taskRepository.findAll(pageable);
     }

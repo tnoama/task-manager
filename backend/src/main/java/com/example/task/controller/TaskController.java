@@ -36,8 +36,7 @@ public class TaskController {
 
     @PutMapping("/{id}")
     public TaskDto updateTask(@PathVariable UUID id, @RequestBody TaskDto updates) {
-        TaskItem updateEntity = dtoToEntity(updates);
-        TaskItem updated = taskService.updateTask(id, updateEntity);
+        TaskItem updated = taskService.updateTask(id, updates);
         return entityToDto(updated);
     }
 
@@ -49,13 +48,40 @@ public class TaskController {
     @GetMapping
     public Page<TaskDto> listTasks(
             @RequestParam(required = false) String assignee,
-            @RequestParam(required = false) TaskItem.Category category,
-            @RequestParam(required = false) TaskItem.Status status,
-            @RequestParam(required = false) TaskItem.Priority priority,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String priority,
             @RequestParam(defaultValue = "dueDate") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
+
+        // Debug logging for filter params
+        System.out.println("Filter params: assignee=" + assignee + ", category=" + category + ", status=" + status
+                + ", priority=" + priority);
+
+        // Convert string params to enums if present
+        TaskItem.Category categoryEnum = null;
+        TaskItem.Status statusEnum = null;
+        TaskItem.Priority priorityEnum = null;
+        try {
+            if (category != null && !category.isBlank())
+                categoryEnum = TaskItem.Category.valueOf(category);
+        } catch (Exception e) {
+            System.out.println("Invalid category: " + category);
+        }
+        try {
+            if (status != null && !status.isBlank())
+                statusEnum = TaskItem.Status.valueOf(status);
+        } catch (Exception e) {
+            System.out.println("Invalid status: " + status);
+        }
+        try {
+            if (priority != null && !priority.isBlank())
+                priorityEnum = TaskItem.Priority.valueOf(priority);
+        } catch (Exception e) {
+            System.out.println("Invalid priority: " + priority);
+        }
 
         // Build sorting
         Sort.Direction direction = Sort.Direction.ASC;
@@ -66,7 +92,8 @@ public class TaskController {
         Pageable pageable = PageRequest.of(page, size, sort);
 
         // Call service with explicit filters
-        Page<TaskItem> items = taskService.listTasksFiltered(assignee, category, status, priority, pageable);
+        Page<TaskItem> items = taskService.listTasksFiltered(assignee, categoryEnum, statusEnum, priorityEnum,
+                pageable);
         return items.map(this::entityToDto);
     }
 
