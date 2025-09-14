@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      const API_URL = 'http://localhost:8080/api/v1/tasks';
+      let page = 0;
+      let size = 5;
+      let search = '';
+      let tasksData = { content: [], totalPages: 1 };
+
+      async function fetchTasks() {
+        let url = `${API_URL}?page=${page}&size=${size}`;
+        if (search) url += `&assignee=${encodeURIComponent(search)}`;
+        const res = await fetch(url);
+        tasksData = await res.json();
+        renderTasks(tasksData.content || []);
+        renderPagination();
+      }
+
+      function renderTasks(tasks) {
+        const tbody = document.querySelector('#tasksTable tbody');
+        tbody.innerHTML = '';
+        tasks.forEach(task => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${task.assignee || ''}</td>
+            <td>${task.description || ''}</td>
+            <td>${task.category || ''}</td>
+            <td>${task.dueDate || ''}</td>
+            <td class="actions">
+              <button onclick="markDone('${task.id}')">Done</button>
+              <button onclick="deleteTask('${task.id}')">Delete</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      function renderPagination() {
+        document.getElementById('pageNum').textContent = (page + 1);
+        document.getElementById('prevPage').disabled = page === 0;
+        document.getElementById('nextPage').disabled = page >= (tasksData.totalPages - 1);
+      }
+
+      document.getElementById('taskForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const task = {
+          assignee: document.getElementById('assignee').value,
+          description: document.getElementById('description').value,
+          category: document.getElementById('category').value,
+          dueDate: document.getElementById('dueDate').value,
+          title: document.getElementById('description').value || 'Task',
+        };
+        await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(task)
+        });
+        e.target.reset();
+        fetchTasks();
+      });
+
+      document.getElementById('filterBtn').addEventListener('click', function() {
+        search = document.getElementById('search').value;
+        page = 0;
+        fetchTasks();
+      });
+
+      document.getElementById('prevPage').addEventListener('click', function() {
+        if (page > 0) { page--; fetchTasks(); }
+      });
+      document.getElementById('nextPage').addEventListener('click', function() {
+        if (page < tasksData.totalPages - 1) { page++; fetchTasks(); }
+      });
+
+      async function deleteTask(id) {
+        await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+        fetchTasks();
+      }
+
+      async function markDone(id) {
+        await fetch(`${API_URL}/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'DONE' })
+        });
+        fetchTasks();
+      }
+
+      window.deleteTask = deleteTask;
+      window.markDone = markDone;
+
+      fetchTasks();
+    </script>
+          <input type="date" id="dueDate" placeholder="Due Date" />
+          <button type="submit">Submit</button>
+        </form>
+      </div>
+      <div class="dashboard-section">
+        <h2>Dashboard</h2>
+        <div class="dashboard-header">
+          <input type="text" id="search" placeholder="Search" />
+          <button id="filterBtn">Filter</button>
+        </div>
+        <table id="tasksTable">
+          <thead>
+            <tr>
+              <th>Assignee</th>
+              <th>Description</th>
+              <th>Category</th>
+              <th>Due Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Tasks will be rendered here -->
+          </tbody>
+        <style>
+          body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; padding: 0; }
+          .main { display: flex; max-width: 900px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+          .form-section, .dashboard-section { flex: 1; padding: 32px 24px; }
+          .form-section { border-right: 1px solid #eee; }
+          h2 { margin-top: 0; }
+          form { display: flex; flex-direction: column; gap: 16px; }
+          input, select, button { padding: 8px; font-size: 16px; }
+          button { background: #2563eb; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+          button:disabled { background: #ccc; }
+          .dashboard-header { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+          .dashboard-header input { flex: 1; }
+          table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+          th { background: #f0f0f0; }
+          .pagination { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 12px; }
+          .actions button { margin-right: 8px; background: #f59e42; color: #fff; }
+          .actions button:last-child { background: #ef4444; }
+        </style>
+      async function fetchTasks() {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        renderTasks(data.content || data); // supports both paged and array
+      }
+
+      function renderTasks(tasks) {
+        const tbody = document.querySelector("#tasksTable tbody");
+        tbody.innerHTML = "";
+        tasks.forEach((task) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+          <td>${task.title}</td>
+          <td>${task.assignee || ""}</td>
+          <td>${task.category || ""}</td>
+          <td>${task.status}</td>
+          <td>${task.dueDate || ""}</td>
+          <td class="actions">
+            <button onclick="markDone('${task.id}')">Done</button>
+            <button onclick="deleteTask('${task.id}')">Delete</button>
+          </td>
+        `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      document
+        .getElementById("taskForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const task = {
+            title: document.getElementById("title").value,
+            description: document.getElementById("description").value,
+            assignee: document.getElementById("assignee").value,
+            category: document.getElementById("category").value,
+            dueDate: document.getElementById("dueDate").value,
+          };
+          await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(task),
+          });
+          e.target.reset();
+          fetchTasks();
+        });
+
+      async function deleteTask(id) {
+        await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+        fetchTasks();
+      }
+
+      async function markDone(id) {
+        await fetch(`${API_URL}/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "DONE" }),
+        });
+        fetchTasks();
+      }
+
+      window.deleteTask = deleteTask;
+      window.markDone = markDone;
+
+      fetchTasks();
+    </script>
+  </body>
+</html>
